@@ -1,0 +1,1692 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>教师管理端 - 作业管理系统</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', Arial, sans-serif;
+            background: #f0f7ff;
+            min-height: 100vh;
+            padding: 1vh;
+            color: #2c3e50;
+            width: 100vw;
+            max-width: 100%;
+            position: relative;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1920px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 0 2vw;
+        }
+
+        .header {
+            background: white;
+            padding: 2vh 2vw;
+            border-radius: 8px;
+            border: 1px solid #e3f2fd;
+            margin-bottom: 1vh;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1vh;
+        }
+
+        .header h1 {
+            color: #1976d2;
+            font-size: clamp(14px, 2.5vh, 24px);
+            font-weight: 500;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 1vh 2vw;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: clamp(11px, 1.6vh, 14px);
+        }
+
+        .btn-primary {
+            background: #1976d2;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1565c0;
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #d32f2f;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e1;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+
+        .section {
+            background: white;
+            padding: 2vh 2vw;
+            border-radius: 8px;
+            border: 1px solid #e3f2fd;
+            margin-bottom: 1vh;
+        }
+
+        .section h2 {
+            color: #1976d2;
+            margin-bottom: 1.5vh;
+            padding-bottom: 1vh;
+            border-bottom: 1px solid #e3f2fd;
+            font-size: clamp(14px, 2vh, 18px);
+            font-weight: 500;
+        }
+
+        .add-student-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 6px;
+            color: #334155;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            max-width: 100%;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #1976d2;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1vh;
+            margin-bottom: 1vh;
+        }
+
+        .stat-card {
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 2vh 1vw;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: clamp(20px, 4vh, 36px);
+            font-weight: 500;
+            margin-bottom: 0.5vh;
+        }
+
+        .stat-label {
+            font-size: clamp(11px, 1.5vh, 14px);
+            opacity: 0.9;
+        }
+
+        .table-container {
+            max-width: 100%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+            min-width: 500px;
+        }
+
+        thead {
+            background: #f8fafc;
+            color: #475569;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        th {
+            font-weight: 500;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .status-submitted {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #ca8a04;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            background: #f1f5f9;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            color: #64748b;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: #1976d2;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 8px;
+            }
+
+            .add-student-form {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                text-align: center;
+                padding: 16px;
+            }
+
+            .header h1 {
+                font-size: 16px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section {
+                padding: 16px;
+                margin-bottom: 12px;
+            }
+
+            .section h2 {
+                font-size: 16px;
+            }
+
+            table {
+                font-size: 12px;
+                min-width: 400px;
+            }
+
+            th, td {
+                padding: 6px 4px;
+                font-size: 12px;
+            }
+
+            .btn {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+
+            .btn-small {
+                padding: 4px 8px;
+                font-size: 11px;
+            }
+
+            .stat-number {
+                font-size: 24px;
+            }
+
+            .stat-label {
+                font-size: 12px;
+            }
+        }
+
+        .image-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #dbeafe;
+            color: #1e40af;
+            border-radius: 12px;
+            font-size: 11px;
+            margin-left: 6px;
+            cursor: pointer;
+        }
+
+        .image-badge:hover {
+            background: #bfdbfe;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            overflow: auto;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .modal-header h3 {
+            color: #1976d2;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .close-modal {
+            color: #94a3b8;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            background: none;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .close-modal:hover {
+            color: #64748b;
+        }
+
+        .modal-images {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .modal-image-item {
+            position: relative;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+
+        .modal-image-item img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            cursor: pointer;
+            display: block;
+        }
+
+        .modal-image-item img:hover {
+            opacity: 0.8;
+        }
+
+        .modal-image-info {
+            padding: 8px;
+            font-size: 11px;
+            color: #64748b;
+            background: #f8fafc;
+            text-align: center;
+        }
+
+        .calendar-section {
+            margin-top: 20px;
+        }
+
+        .date-selector {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .date-selector label {
+            font-weight: 500;
+            color: #334155;
+        }
+
+        .date-selector input[type="date"] {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #334155;
+        }
+
+        .date-selector input[type="date"]:focus {
+            outline: none;
+            border-color: #1976d2;
+        }
+
+        .date-selector select {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #334155;
+            background: white;
+            cursor: pointer;
+        }
+
+        .date-selector select:focus {
+            outline: none;
+            border-color: #1976d2;
+        }
+
+        .daily-stats-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .chart-container {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .chart-container h3 {
+            color: #1976d2;
+            font-size: 16px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .pie-chart-wrapper {
+            position: relative;
+            height: 250px;
+            margin-bottom: 12px;
+        }
+
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 12px;
+            border-radius: 6px;
+            background: #f8fafc;
+        }
+
+        .stat-box.submitted {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .stat-box.rejected {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .stat-box.not-submitted {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .stat-box-value {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .stat-box-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .homework-details-list {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .homework-details-list h3 {
+            color: #1976d2;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+
+        .homework-detail-item {
+            padding: 12px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .homework-detail-item:last-child {
+            border-bottom: none;
+        }
+
+        .homework-detail-info {
+            flex: 1;
+        }
+
+        .homework-detail-title {
+            font-weight: 500;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .homework-detail-stats {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .no-data-message {
+            text-align: center;
+            padding: 40px;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .abnormal-badge {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        @media (max-width: 1024px) {
+            .daily-stats-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <script>
+        // 自动缩放以适应窗口
+        function autoScaleContent() {
+            const container = document.querySelector('.container');
+            if (!container) return;
+            
+            const windowHeight = window.innerHeight;
+            const windowWidth = window.innerWidth;
+            const containerHeight = container.scrollHeight;
+            const containerWidth = container.scrollWidth;
+            
+            // 如果页面内容高度超过视口高度（需要滚动条），则不进行缩放
+            if (containerHeight > windowHeight - 20) {
+                container.style.transform = 'scale(1)';
+                container.style.transformOrigin = 'top center';
+                document.body.style.height = 'auto';
+                return;
+            }
+            
+            // 计算需要的缩放比例
+            const scaleHeight = (windowHeight - 20) / containerHeight;
+            const scaleWidth = (windowWidth - 20) / containerWidth;
+            const scale = Math.min(scaleHeight, scaleWidth, 1); // 不放大，只缩小
+            
+            if (scale < 1) {
+                container.style.transform = `scale(${scale})`;
+                container.style.transformOrigin = 'top center';
+                document.body.style.height = `${containerHeight * scale + 20}px`;
+            } else {
+                container.style.transform = 'scale(1)';
+                document.body.style.height = 'auto';
+            }
+        }
+        
+        // 页面加载和窗口变化时执行缩放
+        window.addEventListener('load', () => {
+            setTimeout(autoScaleContent, 100);
+            setTimeout(autoScaleContent, 500);
+        });
+        window.addEventListener('resize', autoScaleContent);
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>教师管理端 - <span id="teacher-subject"></span></h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="window.location.href='/'">返回学生端</button>
+                <button class="btn btn-danger" onclick="logout()">退出登录</button>
+            </div>
+        </div>
+
+        <!-- 统计信息 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="total-students">0</div>
+                <div class="stat-label">总学生数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="submitted-students">0</div>
+                <div class="stat-label">已提交</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="unsubmitted-students">0</div>
+                <div class="stat-label">未提交</div>
+            </div>
+            <div class="stat-card" id="ai-review-card" style="cursor: pointer; position: relative;" onclick="toggleAIReview()">
+                <div class="stat-number" id="ai-review-status" style="font-size: clamp(16px, 3vh, 28px);">--</div>
+                <div class="stat-label">AI复审状态</div>
+                <div style="font-size: clamp(9px, 1.2vh, 11px); margin-top: 4px; opacity: 0.7;">点击切换</div>
+            </div>
+        </div>
+
+        <!-- 布置作业 -->
+        <div class="section">
+            <h2>布置作业</h2>
+            <form class="add-student-form" onsubmit="publishHomework(event)" style="grid-template-columns: 1fr;">
+                <div class="form-group">
+                    <label for="homework-title">作业标题 <span style="color: #ef4444;">*</span></label>
+                    <input type="text" id="homework-title" placeholder="例如: 第三章练习题" required>
+                </div>
+                
+                <!-- 高级配置（可折叠） -->
+                <div style="margin: 16px 0;">
+                    <button type="button" class="btn btn-secondary" onclick="toggleAdvancedConfig()" style="width: 100%;">
+                        <span id="advancedConfigToggle">▶</span> 高级配置（可选）
+                    </button>
+                </div>
+                
+                <div id="advancedConfig" style="display: none; padding: 16px; background: #f8fafc; border-radius: 6px; border: 1px solid #e2e8f0;">
+                    <div class="form-group">
+                        <label for="max-images">
+                            允许上传图片数量
+                            <span style="color: #64748b; font-size: 12px; font-weight: normal;">(1-20张，默认5张)</span>
+                        </label>
+                        <input type="number" id="max-images" min="1" max="20" value="5" placeholder="5">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="ai-prompt">
+                            自定义AI检测提示词
+                            <span style="color: #64748b; font-size: 12px; font-weight: normal;">(留空使用默认提示词)</span>
+                        </label>
+                        <textarea id="ai-prompt" rows="4" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; font-family: inherit; resize: vertical;" placeholder="例如：请判断这些图片是否为数学作业，需要包含计算题或应用题..."></textarea>
+                        <div style="font-size: 12px; color: #64748b; margin-top: 4px;">
+                            💡 提示：自定义提示词可以让AI更准确地识别特定类型的作业
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group" style="margin-top: 16px;">
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">布置作业</button>
+                </div>
+            </form>
+
+            <div class="table-container" style="margin-top: 20px;">
+                <h3 style="color: #1976d2; margin-bottom: 12px; font-size: 16px;">已布置的作业</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>作业标题</th>
+                            <th>布置时间</th>
+                            <th>提交情况</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="homework-list-body">
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: #999;">加载中...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 日历统计 -->
+        <div class="section">
+            <h2>📅 日历统计 - 每日作业提交情况</h2>
+            <div class="calendar-section">
+                <div class="date-selector">
+                    <label for="dateSelect">选择日期：</label>
+                    <select id="dateSelect" onchange="loadDailyStats()">
+                        <option value="">请选择日期</option>
+                    </select>
+                    <span style="color: #94a3b8; font-size: 13px;">或</span>
+                    <input type="date" id="datePicker" onchange="loadDailyStatsFromPicker()">
+                </div>
+
+                <div id="dailyStatsContent" style="display: none;">
+                    <div class="daily-stats-container">
+                        <div class="chart-container">
+                            <h3>提交情况总览</h3>
+                            <div class="pie-chart-wrapper">
+                                <canvas id="dailyPieChart"></canvas>
+                            </div>
+                            <div class="stats-summary" style="grid-template-columns: repeat(4, 1fr);">
+                                <div class="stat-box submitted">
+                                    <div class="stat-box-value" id="submittedCount">0</div>
+                                    <div class="stat-box-label">正常提交</div>
+                                    <div class="stat-box-label" id="submittedPercent">0%</div>
+                                </div>
+                                <div class="stat-box" style="background: #fef3c7; color: #ca8a04;">
+                                    <div class="stat-box-value" id="rejectedCount">0</div>
+                                    <div class="stat-box-label">AI判定异常</div>
+                                    <div class="stat-box-label" id="rejectedPercent">0%</div>
+                                </div>
+                                <div class="stat-box rejected">
+                                    <div class="stat-box-value" id="errorCount">0</div>
+                                    <div class="stat-box-label">AI审核出现错误</div>
+                                    <div class="stat-box-label" id="errorPercent">0%</div>
+                                </div>
+                                <div class="stat-box not-submitted">
+                                    <div class="stat-box-value" id="notSubmittedCount">0</div>
+                                    <div class="stat-box-label">未提交</div>
+                                    <div class="stat-box-label" id="notSubmittedPercent">0%</div>
+                                </div>
+                            </div>
+                            <div style="margin-top: 16px; padding: 12px; background: #f8fafc; border-radius: 6px; font-size: 12px; color: #64748b; line-height: 1.6;">
+                                <div style="margin-bottom: 4px;"><strong style="color: #1e293b;">颜色说明：</strong></div>
+                                <div>🟢 <strong style="color: #10b981;">正常提交</strong> - AI审核通过的作业</div>
+                                <div>🟡 <strong style="color: #f59e0b;">AI判定异常</strong> - 学生提交的图片被AI认定为不像作业</div>
+                                <div>🔴 <strong style="color: #ef4444;">AI审核出现错误</strong> - AI审核过程中出现系统错误</div>
+                                <div>⚪ <strong style="color: #94a3b8;">未提交</strong> - 学生尚未提交作业</div>
+                            </div>
+                        </div>
+
+                        <div class="homework-details-list">
+                            <h3>作业详情</h3>
+                            <div id="homeworkDetailsList">
+                                <div class="no-data-message">请选择日期查看详情</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="noDataMessage" class="no-data-message">
+                    请选择日期查看当日作业提交情况
+                </div>
+            </div>
+        </div>
+
+        <!-- 学生列表标签页 -->
+        <div class="section">
+            <h2>学生管理</h2>
+            
+            <div class="tab-buttons">
+                <button class="tab-btn active" onclick="switchTab('all')">全部学生</button>
+                <button class="tab-btn" onclick="switchTab('unsubmitted')">未提交名单</button>
+                <button class="tab-btn" onclick="switchTab('abnormal')">异常作业</button>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <button class="btn btn-danger" onclick="resetSubmissions()">还原作业提交情况</button>
+            </div>
+
+            <div id="all-students-tab" class="tab-content active">
+                <div class="table-container">
+                    <table id="all-students-table">
+                        <thead>
+                            <tr>
+                                <th>姓名</th>
+                                <th>学号</th>
+                                <th>提交情况</th>
+                                <th>作业详情</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="all-students-body">
+                            <tr>
+                                <td colspan="5" style="text-align: center; color: #999;">加载中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="unsubmitted-students-tab" class="tab-content">
+                <div class="table-container">
+                    <table id="unsubmitted-students-table">
+                        <thead>
+                            <tr>
+                                <th>姓名</th>
+                                <th>学号</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="unsubmitted-students-body">
+                            <tr>
+                                <td colspan="3" style="text-align: center; color: #999;">加载中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="abnormal-submissions-tab" class="tab-content">
+                <div class="table-container">
+                    <table id="abnormal-submissions-table">
+                        <thead>
+                            <tr>
+                                <th>学生</th>
+                                <th>作业</th>
+                                <th>提交时间</th>
+                                <th>AI审核结果</th>
+                                <th>图片</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="abnormal-submissions-body">
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: #999;">加载中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图片查看模态框 -->
+    <div id="imageModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">作业图片</h3>
+                <button class="close-modal" onclick="closeImageModal()">&times;</button>
+            </div>
+            <div id="modalImagesContainer" class="modal-images"></div>
+        </div>
+    </div>
+
+    <script>
+        let systemConfig = {
+            enable_image_upload: false
+        };
+        let currentTeacherInfo = {
+            enable_ai_review: false
+        };
+
+        // 加载系统配置
+        async function loadConfig() {
+            try {
+                const response = await fetch('/api/config');
+                systemConfig = await response.json();
+            } catch (error) {
+                console.error('加载配置失败:', error);
+            }
+        }
+
+        // 更新AI复审状态显示
+        function updateAIReviewDisplay() {
+            const statusElement = document.getElementById('ai-review-status');
+            const cardElement = document.getElementById('ai-review-card');
+
+            if (!systemConfig.enable_ai_review) {
+                // 全局AI复审未启用
+                statusElement.textContent = '全局禁用';
+                cardElement.style.background = '#f1f5f9';
+                cardElement.style.color = '#64748b';
+                cardElement.style.cursor = 'not-allowed';
+                cardElement.onclick = null;
+            } else if (currentTeacherInfo.enable_ai_review) {
+                // AI复审已启用
+                statusElement.textContent = '✓ 已启用';
+                cardElement.style.background = '#dcfce7';
+                cardElement.style.color = '#16a34a';
+                cardElement.style.cursor = 'pointer';
+                cardElement.onclick = toggleAIReview;
+            } else {
+                // AI复审已禁用
+                statusElement.textContent = '✗ 已禁用';
+                cardElement.style.background = '#fee2e2';
+                cardElement.style.color = '#dc2626';
+                cardElement.style.cursor = 'pointer';
+                cardElement.onclick = toggleAIReview;
+            }
+        }
+
+        // 切换AI复审设置
+        async function toggleAIReview() {
+            // 如果全局AI复审未启用，不允许切换
+            if (!systemConfig.enable_ai_review) {
+                alert('系统未启用AI复审功能，请联系管理员在配置文件中启用。');
+                return;
+            }
+
+            const action = currentTeacherInfo.enable_ai_review ? '禁用' : '启用';
+            if (!confirm(`确定要${action}AI复审功能吗？\n\n${action === '启用' ? 'AI将自动审核学生提交的作业图片' : 'AI将不再审核学生提交的作业'}`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/teacher/toggle-ai-review', {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    currentTeacherInfo.enable_ai_review = result.enable_ai_review;
+                    updateAIReviewDisplay();
+                    alert(result.message);
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                console.error('切换AI复审失败:', error);
+                alert('操作失败，请重试');
+            }
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            if (tab === 'all') {
+                document.getElementById('all-students-tab').classList.add('active');
+                loadAllStudents();
+            } else if (tab === 'unsubmitted') {
+                document.getElementById('unsubmitted-students-tab').classList.add('active');
+                loadUnsubmittedStudents();
+            } else if (tab === 'abnormal') {
+                document.getElementById('abnormal-submissions-tab').classList.add('active');
+                loadAbnormalSubmissions();
+            }
+        }
+
+        async function loadAbnormalSubmissions() {
+            try {
+                const response = await fetch('/api/teacher/abnormal-submissions');
+                const submissions = await response.json();
+
+                const tbody = document.getElementById('abnormal-submissions-body');
+                tbody.innerHTML = '';
+
+                if (submissions.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #4caf50; font-weight: bold;">🎉 没有异常作业！</td></tr>';
+                } else {
+                    submissions.forEach(sub => {
+                        let statusText = 'AI审核失败';
+                        let statusColor = '#ca8a04';
+                        
+                        if (sub.ai_review_status === 'rejected') {
+                            statusText = 'AI判定不像作业';
+                            statusColor = '#dc2626';
+                        } else if (sub.ai_review_status === 'reviewing') {
+                            statusText = 'AI判定中';
+                            statusColor = '#f59e0b';
+                        } else if (sub.ai_review_status === 'error') {
+                            statusText = 'AI审核失败';
+                            statusColor = '#ca8a04';
+                        }
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${sub.student_name}<br><span style="font-size: 11px; color: #94a3b8;">${sub.student_id}</span></td>
+                            <td>${sub.homework_subject}<br><span style="font-size: 11px; color: #94a3b8;">${sub.homework_title}</span></td>
+                            <td style="font-size: 12px;">${sub.submitted_at}</td>
+                            <td><span class="abnormal-badge" style="background: ${statusColor === '#dc2626' ? '#fee2e2' : '#fef3c7'}; color: ${statusColor};">${statusText}</span></td>
+                            <td>
+                                ${sub.image_count > 0 ? `<span class="image-badge" onclick="viewStudentImages(${sub.submission_id}, '${sub.student_name}', '${sub.homework_title}')" title="查看图片">📷 ${sub.image_count}</span>` : '-'}
+                            </td>
+                            <td>
+                                ${sub.ai_review_status !== 'reviewing' ? `
+                                    <button class="btn btn-primary btn-small" onclick="approveSubmission(${sub.submission_id})">批准</button>
+                                    <button class="btn btn-danger btn-small" onclick="rejectSubmission(${sub.submission_id})">打回</button>
+                                ` : '<span style="color: #f59e0b; font-size: 12px;">判定中...</span>'}
+                                ${sub.ai_review_status === 'error' ?
+                                    `<button class="btn btn-secondary btn-small" style="background: #e0e7ff; color: #4338ca; margin-left: 4px;" onclick="retryAIReview(${sub.submission_id})">重试AI</button>`
+                                    : ''}
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+            } catch (error) {
+                console.error('加载异常作业列表失败:', error);
+                alert('加载失败，请刷新页面');
+            }
+        }
+
+        let dailyChartInstance = null;
+
+        async function loadHomeworkDates() {
+            try {
+                const response = await fetch('/api/teacher/homework-dates');
+                const dates = await response.json();
+
+                const select = document.getElementById('dateSelect');
+                select.innerHTML = '<option value="">请选择日期</option>';
+
+                if (dates.length === 0) {
+                    select.innerHTML = '<option value="">暂无作业记录</option>';
+                    return;
+                }
+
+                dates.forEach(date => {
+                    const option = document.createElement('option');
+                    option.value = date;
+                    option.textContent = date;
+                    select.appendChild(option);
+                });
+
+                // 默认选择最新日期
+                if (dates.length > 0) {
+                    select.value = dates[0];
+                    loadDailyStats();
+                }
+            } catch (error) {
+                console.error('加载日期列表失败:', error);
+            }
+        }
+
+        async function loadDailyStats() {
+            const dateSelect = document.getElementById('dateSelect');
+            const date = dateSelect.value;
+
+            if (!date) {
+                document.getElementById('dailyStatsContent').style.display = 'none';
+                document.getElementById('noDataMessage').style.display = 'block';
+                return;
+            }
+
+            // 同步日期选择器
+            document.getElementById('datePicker').value = date;
+
+            try {
+                const response = await fetch(`/api/teacher/daily-homework-stats?date=${date}`);
+                const data = await response.json();
+
+                if (data.homeworks.length === 0) {
+                    document.getElementById('dailyStatsContent').style.display = 'none';
+                    document.getElementById('noDataMessage').style.display = 'block';
+                    document.getElementById('noDataMessage').textContent = `${date} 当天没有布置作业`;
+                    return;
+                }
+
+                document.getElementById('dailyStatsContent').style.display = 'block';
+                document.getElementById('noDataMessage').style.display = 'none';
+
+                // 更新统计数据
+                const summary = data.summary;
+                document.getElementById('submittedCount').textContent = summary.submitted;
+                document.getElementById('rejectedCount').textContent = summary.ai_rejected;
+                document.getElementById('errorCount').textContent = summary.ai_error || 0;
+                document.getElementById('notSubmittedCount').textContent = summary.not_submitted;
+                document.getElementById('submittedPercent').textContent = summary.submitted_percent + '%';
+                document.getElementById('rejectedPercent').textContent = summary.ai_rejected_percent + '%';
+                document.getElementById('errorPercent').textContent = (summary.ai_error_percent || 0) + '%';
+                document.getElementById('notSubmittedPercent').textContent = summary.not_submitted_percent + '%';
+
+                // 更新饼状图
+                const ctx = document.getElementById('dailyPieChart');
+                if (dailyChartInstance) {
+                    dailyChartInstance.destroy();
+                }
+
+                dailyChartInstance = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['正常提交', 'AI判定异常', 'AI审核出现错误', '未提交'],
+                        datasets: [{
+                            data: [summary.submitted, summary.ai_rejected, summary.ai_error || 0, summary.not_submitted],
+                            backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#94a3b8'],
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 15,
+                                    font: {
+                                        size: 12
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.parsed || 0;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percent = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                        return `${label}: ${value} (${percent}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // 更新作业详情列表
+                const detailsList = document.getElementById('homeworkDetailsList');
+                detailsList.innerHTML = '';
+
+                data.homeworks.forEach(hw => {
+                    const item = document.createElement('div');
+                    item.className = 'homework-detail-item';
+                    
+                    // 计算百分比
+                    const normalSubmitted = hw.submitted - hw.ai_rejected - (hw.ai_error || 0);
+                    const submittedPercent = hw.total_students > 0 ? ((normalSubmitted / hw.total_students) * 100).toFixed(1) : 0;
+                    const rejectedPercent = hw.total_students > 0 ? ((hw.ai_rejected / hw.total_students) * 100).toFixed(1) : 0;
+                    const errorPercent = hw.total_students > 0 ? (((hw.ai_error || 0) / hw.total_students) * 100).toFixed(1) : 0;
+                    const notSubmittedPercent = hw.total_students > 0 ? ((hw.not_submitted / hw.total_students) * 100).toFixed(1) : 0;
+                    
+                    item.innerHTML = `
+                        <div class="homework-detail-info">
+                            <div class="homework-detail-title">${hw.subject} - ${hw.title}</div>
+                            <div class="homework-detail-stats" style="margin-top: 8px;">
+                                <span style="color: #64748b;">总学生: <strong style="color: #1e293b;">${hw.total_students}</strong></span> |
+                                <span style="color: #10b981;">正常提交: <strong>${normalSubmitted}</strong> (${submittedPercent}%)</span> |
+                                <span style="color: #f59e0b;">AI判定异常: <strong>${hw.ai_rejected}</strong> (${rejectedPercent}%)</span> |
+                                <span style="color: #ef4444;">AI审核出现错误: <strong>${hw.ai_error || 0}</strong> (${errorPercent}%)</span> |
+                                <span style="color: #94a3b8;">未提交: <strong>${hw.not_submitted}</strong> (${notSubmittedPercent}%)</span>
+                            </div>
+                        </div>
+                    `;
+                    detailsList.appendChild(item);
+                });
+
+                setTimeout(autoScaleContent, 200);
+            } catch (error) {
+                console.error('加载每日统计失败:', error);
+                alert('加载统计数据失败，请重试');
+            }
+        }
+
+        function loadDailyStatsFromPicker() {
+            const datePicker = document.getElementById('datePicker');
+            const date = datePicker.value;
+
+            if (!date) return;
+
+            // 同步下拉选择器
+            const dateSelect = document.getElementById('dateSelect');
+            dateSelect.value = date;
+
+            loadDailyStats();
+        }
+
+        async function loadAllStudents() {
+            try {
+                const response = await fetch('/api/teacher/all-students-status');
+                const students = await response.json();
+
+                const tbody = document.getElementById('all-students-body');
+                tbody.innerHTML = '';
+
+                let totalSubmissions = 0;
+                let totalHomework = 0;
+
+                if (students.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #999;">暂无学生</td></tr>';
+                } else {
+                    students.forEach(student => {
+                        totalHomework += student.total_homework;
+                        totalSubmissions += student.submitted_count;
+
+                        // 构建作业提交情况列表
+                        let homeworkStatus = '';
+                        if (student.homework_details && student.homework_details.length > 0) {
+                            student.homework_details.forEach(hw => {
+                                const statusClass = hw.submitted ? 'status-submitted' : 'status-pending';
+                                const statusText = hw.submitted ? '✓' : '✗';
+                                const imageInfo = systemConfig.enable_image_upload && hw.submitted && hw.image_count > 0 ?
+                                    `<span class="image-badge" onclick="viewStudentImages(${hw.submission_id}, '${student.name}', '${hw.title}')" title="查看图片">📷 ${hw.image_count}</span>` : '';
+                                
+                                // AI审核状态标记
+                                let aiReviewBadge = '';
+                                if (systemConfig.enable_ai_review && hw.submitted && hw.ai_review_status) {
+                                    if (hw.ai_review_status === 'rejected') {
+                                        aiReviewBadge = `<span class="image-badge" style="background: #fee2e2; color: #dc2626; cursor: pointer;" onclick="handleAIReview(${hw.submission_id}, '${student.name}', '${hw.title}')" title="AI审核未通过，点击处理">⚠</span>`;
+                                    } else if (hw.ai_review_status === 'error') {
+                                        aiReviewBadge = `<span class="image-badge" style="background: #fef3c7; color: #ca8a04; cursor: pointer;" onclick="handleAIReview(${hw.submission_id}, '${student.name}', '${hw.title}')" title="AI审核失败，点击处理">⚠</span>`;
+                                    } else if (hw.ai_review_status === 'pending') {
+                                        aiReviewBadge = '<span class="image-badge" style="background: #f1f5f9; color: #64748b;" title="等待AI审核">⏳</span>';
+                                    } else if (hw.ai_review_status === 'reviewing') {
+                                        aiReviewBadge = '<span class="image-badge" style="background: #fef3c7; color: #f59e0b;" title="AI判定中">🤖</span>';
+                                    }
+                                }
+                                
+                                homeworkStatus += `<span class="status-badge ${statusClass}" title="${hw.title}">${hw.title.substring(0, 8)}${hw.title.length > 8 ? '...' : ''}: ${statusText}${imageInfo}${aiReviewBadge}</span> `;
+                            });
+                        } else {
+                            homeworkStatus = '-';
+                        }
+
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${student.name}</td>
+                            <td>${student.student_id}</td>
+                            <td>${student.submitted_count} / ${student.total_homework}</td>
+                            <td style="font-size: 12px;">${homeworkStatus}</td>
+                            <td>-</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+
+                document.getElementById('total-students').textContent = students.length;
+                document.getElementById('submitted-students').textContent = totalSubmissions;
+                document.getElementById('unsubmitted-students').textContent = totalHomework - totalSubmissions;
+
+                // 数据加载后重新计算缩放
+                setTimeout(autoScaleContent, 200);
+
+            } catch (error) {
+                console.error('加载学生列表失败:', error);
+                alert('加载失败，请刷新页面');
+            }
+        }
+
+        async function loadUnsubmittedStudents() {
+            try {
+                const response = await fetch('/api/teacher/unsubmitted-students');
+                const students = await response.json();
+
+                const tbody = document.getElementById('unsubmitted-students-body');
+                tbody.innerHTML = '';
+
+                if (students.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #4caf50; font-weight: bold;">🎉 所有学生都已提交作业！</td></tr>';
+                } else {
+                    students.forEach(student => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${student.name}</td>
+                            <td>${student.student_id}</td>
+                            <td>-</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+            } catch (error) {
+                console.error('加载未提交学生列表失败:', error);
+                alert('加载失败，请刷新页面');
+            }
+        }
+
+        async function deleteStudent(studentId) {
+            alert('此功能已禁用，请使用管理端删除学生');
+        }
+
+        async function resetSubmissions() {
+            if (confirm('确定要还原所有作业提交记录吗？此操作将清空所有学生的提交状态！')) {
+                try {
+                    const response = await fetch('/api/teacher/reset-submissions', {
+                        method: 'POST'
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        alert(result.message);
+                        loadAllStudents();
+                        loadUnsubmittedStudents();
+                    } else {
+                        alert(result.message);
+                    }
+                } catch (error) {
+                    console.error('还原失败:', error);
+                    alert('操作失败，请重试');
+                }
+            }
+        }
+
+        async function logout() {
+            if (confirm('确定要退出登录吗？')) {
+                try {
+                    const response = await fetch('/api/teacher/logout', {
+                        method: 'POST'
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        window.location.href = '/teacher/login';
+                    }
+                } catch (error) {
+                    console.error('退出失败:', error);
+                    window.location.href = '/teacher/login';
+                }
+            }
+        }
+
+        function toggleAdvancedConfig() {
+            const config = document.getElementById('advancedConfig');
+            const toggle = document.getElementById('advancedConfigToggle');
+            
+            if (config.style.display === 'none') {
+                config.style.display = 'block';
+                toggle.textContent = '▼';
+            } else {
+                config.style.display = 'none';
+                toggle.textContent = '▶';
+            }
+            
+            setTimeout(autoScaleContent, 100);
+        }
+
+        async function publishHomework(event) {
+            event.preventDefault();
+
+            const title = document.getElementById('homework-title').value;
+            const maxImages = document.getElementById('max-images').value;
+            const aiPrompt = document.getElementById('ai-prompt').value;
+
+            try {
+                const response = await fetch('/api/teacher/publish-homework', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title,
+                        max_images: maxImages,
+                        ai_prompt: aiPrompt
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(result.message);
+                    document.getElementById('homework-title').value = '';
+                    document.getElementById('max-images').value = '5';
+                    document.getElementById('ai-prompt').value = '';
+                    document.getElementById('advancedConfig').style.display = 'none';
+                    document.getElementById('advancedConfigToggle').textContent = '▶';
+                    loadHomeworks();
+                    loadAllStudents();
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                console.error('布置作业失败:', error);
+                alert('布置失败，请重试');
+            }
+        }
+
+        function exportHomework(homeworkId, format) {
+            window.location.href = `/api/teacher/export-homework/${homeworkId}?format=${format}`;
+        }
+
+        function showExportMenu(homeworkId, title) {
+            const formats = ['Excel', 'CSV', 'JSON', 'TXT'];
+            const formatValues = ['excel', 'csv', 'json', 'txt'];
+            
+            const message = `选择导出格式：\n\n${formats.map((f, i) => `${i + 1}. ${f}`).join('\n')}`;
+            const choice = prompt(message, '1');
+            
+            if (choice) {
+                const index = parseInt(choice) - 1;
+                if (index >= 0 && index < formats.length) {
+                    exportHomework(homeworkId, formatValues[index]);
+                }
+            }
+        }
+
+        async function loadHomeworks() {
+            try {
+                const response = await fetch('/api/teacher/homeworks');
+                const homeworks = await response.json();
+
+                const tbody = document.getElementById('homework-list-body');
+                tbody.innerHTML = '';
+
+                if (homeworks.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #999;">还未布置任何作业</td></tr>';
+                } else {
+                    homeworks.forEach(hw => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${hw.title}</td>
+                            <td>${hw.created_at}</td>
+                            <td>${hw.submitted_count} / ${hw.total_students}</td>
+                            <td>
+                                <button class="btn btn-secondary btn-small" onclick="showExportMenu(${hw.id}, '${hw.title}')">导出</button>
+                                <button class="btn btn-danger btn-small" onclick="deleteHomework(${hw.id})">删除</button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+
+                // 数据加载后重新计算缩放
+                setTimeout(autoScaleContent, 200);
+
+            } catch (error) {
+                console.error('加载作业列表失败:', error);
+            }
+        }
+
+        async function deleteHomework(homeworkId) {
+            if (confirm('确定要删除这个作业吗？相关的提交记录也会被删除。')) {
+                try {
+                    const response = await fetch(`/api/teacher/delete-homework/${homeworkId}`, {
+                        method: 'DELETE'
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        alert(result.message);
+                        loadHomeworks();
+                        loadAllStudents();
+                    } else {
+                        alert(result.message);
+                    }
+                } catch (error) {
+                    console.error('删除作业失败:', error);
+                    alert('删除失败，请重试');
+                }
+            }
+        }
+
+        async function viewStudentImages(submissionId, studentName, homeworkTitle) {
+            try {
+                const response = await fetch(`/api/submission-images/${submissionId}`);
+                const images = await response.json();
+
+                document.getElementById('modalTitle').textContent = `${studentName} - ${homeworkTitle}`;
+                
+                const container = document.getElementById('modalImagesContainer');
+                container.innerHTML = '';
+
+                if (images.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: #94a3b8; grid-column: 1/-1;">暂无图片</p>';
+                } else {
+                    images.forEach(img => {
+                        const div = document.createElement('div');
+                        div.className = 'modal-image-item';
+                        div.innerHTML = `
+                            <img src="${img.url}" alt="${img.original_filename}" onclick="window.open('${img.url}', '_blank')" title="点击查看大图">
+                            <div class="modal-image-info">${img.uploaded_at}</div>
+                        `;
+                        container.appendChild(div);
+                    });
+                }
+
+                document.getElementById('imageModal').style.display = 'block';
+            } catch (error) {
+                console.error('加载图片失败:', error);
+                alert('加载图片失败，请重试');
+            }
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').style.display = 'none';
+        }
+
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('imageModal');
+            if (event.target === modal) {
+                closeImageModal();
+            }
+        }
+
+        async function handleAIReview(submissionId, studentName, homeworkTitle) {
+            const message = `学生：${studentName}
+作业：${homeworkTitle}
+
+AI判定该作业可能不是真实作业。
+
+请选择处理方式：`;
+            
+            if (confirm(message + '\n\n点击"确定"批准该作业\n点击"取消"查看图片后再决定')) {
+                // 批准作业
+                try {
+                    const response = await fetch(`/api/teacher/override-ai-review/${submissionId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ action: 'approve' })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        alert('已批准该作业');
+                        loadAllStudents();
+                    } else {
+                        alert(result.message);
+                    }
+                } catch (error) {
+                    console.error('批准作业失败:', error);
+                    alert('操作失败，请重试');
+                }
+            } else {
+                // 查看图片
+                viewStudentImages(submissionId, studentName, homeworkTitle);
+                
+                // 在模态框中添加操作按钮
+                setTimeout(() => {
+                    const modalContent = document.querySelector('.modal-content');
+                    let actionButtons = document.getElementById('aiReviewActions');
+                    
+                    if (!actionButtons) {
+                        actionButtons = document.createElement('div');
+                        actionButtons.id = 'aiReviewActions';
+                        actionButtons.style.cssText = 'margin-top: 16px; display: flex; gap: 12px; justify-content: center;';
+                        actionButtons.innerHTML = `
+                            <button class="btn btn-primary" onclick="approveSubmission(${submissionId})">✓ 批准作业</button>
+                            <button class="btn btn-danger" onclick="rejectSubmission(${submissionId})">✗ 打回作业</button>
+                        `;
+                        modalContent.appendChild(actionButtons);
+                    }
+                }, 100);
+            }
+        }
+
+        async function approveSubmission(submissionId) {
+            if (!confirm('确定要批准这个作业吗？')) return;
+
+            try {
+                const response = await fetch(`/api/teacher/override-ai-review/${submissionId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ action: 'approve' })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('已批准该作业');
+                    closeImageModal();
+                    loadAllStudents();
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                console.error('批准作业失败:', error);
+                alert('操作失败，请重试');
+            }
+        }
+
+        async function rejectSubmission(submissionId) {
+            if (!confirm('确定要打回这个作业吗？\n\n作业记录和图片将被删除，学生需要重新提交。')) return;
+
+            try {
+                const response = await fetch(`/api/teacher/override-ai-review/${submissionId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ action: 'reject_and_delete' })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('已打回该作业');
+                    closeImageModal();
+                    loadAllStudents();
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                console.error('打回作业失败:', error);
+                alert('操作失败，请重试');
+            }
+        }
+
+        async function retryAIReview(submissionId) {
+            if (!confirm('确定要重新让AI审核这个作业吗？')) return;
+
+            try {
+                const response = await fetch(`/api/teacher/retry-ai-review/${submissionId}`, {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(result.message);
+                    // 刷新列表
+                    loadAbnormalSubmissions();
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                console.error('重试AI审核失败:', error);
+                alert('操作失败，请重试');
+            }
+        }
+
+        // 初始化加载
+        async function initPage() {
+            await loadConfig();
+            loadAllStudents();
+            loadHomeworks();
+            loadHomeworkDates();
+        }
+
+        initPage();
+
+        // 从 URL获取学科信息并显示
+        fetch('/api/teacher/current-info')
+            .then(res => res.json())
+            .then(data => {
+                if (data.subject) {
+                    document.getElementById('teacher-subject').textContent = data.subject;
+                }
+                if (data.enable_ai_review !== undefined) {
+                    currentTeacherInfo.enable_ai_review = data.enable_ai_review;
+                    updateAIReviewDisplay();
+                }
+            })
+            .catch(err => console.error('获取教师信息失败:', err));
+
+        setInterval(() => {
+            loadAllStudents();
+            loadHomeworks();
+            loadHomeworkDates();
+            if (document.getElementById('unsubmitted-students-tab').classList.contains('active')) {
+                loadUnsubmittedStudents();
+            }
+            if (document.getElementById('abnormal-submissions-tab').classList.contains('active')) {
+                loadAbnormalSubmissions();
+            }
+        }, 30000);
+    </script>
+</body>
+</html>

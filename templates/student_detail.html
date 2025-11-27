@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生详情 - 作业管理系统</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', Arial, sans-serif;
+            background: #f0f7ff;
+            min-height: 100vh;
+            padding: 20px;
+            color: #2c3e50;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            border: 1px solid #e3f2fd;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #1976d2;
+            font-size: 24px;
+            font-weight: 500;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: #1976d2;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1565c0;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e1;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e3f2fd;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: 500;
+            color: #1976d2;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .section {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            border: 1px solid #e3f2fd;
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            color: #1976d2;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e3f2fd;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .chart-container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+        thead {
+            background: #f8fafc;
+            color: #475569;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        th {
+            font-weight: 500;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .status-badge.submitted {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .status-badge.approved {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .status-badge.rejected {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .status-badge.reviewing {
+            background: #fef3c7;
+            color: #f59e0b;
+        }
+
+        .status-badge.error {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .status-badge.not-submitted {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 id="studentName">学生详情</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="window.location.href='/teacher'">返回</button>
+            </div>
+        </div>
+
+        <div id="loading" class="loading">加载中...</div>
+
+        <div id="content" style="display: none;">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalHomework">0</div>
+                    <div class="stat-label">总作业数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="submittedCount">0</div>
+                    <div class="stat-label">已提交</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="submissionRate">0%</div>
+                    <div class="stat-label">提交率</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>作业状态分布</h2>
+                <div class="chart-container">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>历史作业记录</h2>
+                <div class="export-buttons">
+                    <button class="btn btn-primary btn-small" onclick="exportData('excel')">导出Excel</button>
+                    <button class="btn btn-primary btn-small" onclick="exportData('csv')">导出CSV</button>
+                    <button class="btn btn-primary btn-small" onclick="exportData('json')">导出JSON</button>
+                    <button class="btn btn-primary btn-small" onclick="exportData('txt')">导出TXT</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>作业名</th>
+                            <th>学科</th>
+                            <th>布置时间</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody id="homeworkTable">
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: #999;">加载中...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const studentId = parseInt('{{ student_id }}');
+        let chartInstance = null;
+
+        async function loadStudentData() {
+            try {
+                const response = await fetch(`/api/teacher/student-stats/${studentId}`);
+                const data = await response.json();
+
+                if (!data.success && data.success === false) {
+                    alert(data.message);
+                    window.location.href = '/teacher';
+                    return;
+                }
+
+                // 更新标题
+                document.getElementById('studentName').textContent = 
+                    `${data.student.name} (${data.student.student_id})`;
+
+                // 更新统计数据
+                document.getElementById('totalHomework').textContent = data.stats.total_homework;
+                document.getElementById('submittedCount').textContent = data.stats.submitted;
+                document.getElementById('submissionRate').textContent = data.stats.submission_rate + '%';
+
+                // 绘制饼状图
+                const ctx = document.getElementById('statusChart');
+                if (chartInstance) {
+                    chartInstance.destroy();
+                }
+
+                chartInstance = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['已提交-通过', '已提交-异常', 'AI判定中', 'AI审核失败', '未提交'],
+                        datasets: [{
+                            data: [
+                                data.stats.approved,
+                                data.stats.rejected,
+                                data.stats.reviewing,
+                                data.stats.error,
+                                data.stats.not_submitted
+                            ],
+                            backgroundColor: ['#10b981', '#ef4444', '#f59e0b', '#94a3b8', '#cbd5e1'],
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 15,
+                                    font: {
+                                        size: 12
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.parsed || 0;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percent = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                        return `${label}: ${value} (${percent}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // 更新作业列表
+                const tbody = document.getElementById('homeworkTable');
+                tbody.innerHTML = '';
+
+                if (data.homework_details.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #999;">暂无作业记录</td></tr>';
+                } else {
+                    data.homework_details.forEach(hw => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${hw.title}</td>
+                            <td>${hw.subject}</td>
+                            <td>${hw.created_at}</td>
+                            <td><span class="status-badge ${hw.status_class}">${hw.status}</span></td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+
+            } catch (error) {
+                console.error('加载学生数据失败:', error);
+                alert('加载失败，请刷新页面');
+            }
+        }
+
+        function exportData(format) {
+            window.location.href = `/api/teacher/export-student/${studentId}?format=${format}`;
+        }
+
+        loadStudentData();
+    </script>
+</body>
+</html>

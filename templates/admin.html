@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理端 - 作业管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', Arial, sans-serif;
+            background: #f0f7ff;
+            min-height: 100vh;
+            padding: 20px;
+            color: #2c3e50;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            border: 1px solid #e3f2fd;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #1976d2;
+            font-size: 24px;
+            font-weight: 500;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: #1976d2;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1565c0;
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #d32f2f;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e1;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e3f2fd;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: 500;
+            color: #1976d2;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .section {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            border: 1px solid #e3f2fd;
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            color: #1976d2;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e3f2fd;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            background: #f1f5f9;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            color: #64748b;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: #1976d2;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+        thead {
+            background: #f8fafc;
+            color: #475569;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        th {
+            font-weight: 500;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #334155;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #1976d2;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            overflow: auto;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 24px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .modal-header h3 {
+            color: #1976d2;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .close-modal {
+            color: #94a3b8;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            background: none;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .close-modal:hover {
+            color: #64748b;
+        }
+
+        .file-upload {
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 24px;
+            text-align: center;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .file-upload:hover {
+            border-color: #1976d2;
+            background: #f8fafc;
+        }
+
+        .file-upload input[type="file"] {
+            display: none;
+        }
+
+        .file-info {
+            margin-top: 12px;
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #334155;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 管理端</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="window.location.href='/'">学生端</button>
+                <button class="btn btn-secondary" onclick="window.location.href='/teacher/login'">教师端</button>
+                <button class="btn btn-danger" onclick="logout()">退出登录</button>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="total-teachers">0</div>
+                <div class="stat-label">教师总数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="total-students">0</div>
+                <div class="stat-label">学生总数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="total-homeworks">0</div>
+                <div class="stat-label">作业总数</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>管理功能</h2>
+            
+            <div class="tab-buttons">
+                <button class="tab-btn active" onclick="switchTab('teachers')">教师管理</button>
+                <button class="tab-btn" onclick="switchTab('students')">学生管理</button>
+                <button class="tab-btn" onclick="switchTab('homeworks')">作业管理</button>
+            </div>
+
+            <!-- 教师管理 -->
+            <div id="teachers-tab" class="tab-content active">
+                <button class="btn btn-primary btn-small" onclick="showAddTeacherModal()">+ 添加教师</button>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>用户名</th>
+                            <th>学科</th>
+                            <th>作业数</th>
+                            <th>AI复审</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teachers-body">
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: #999;">加载中...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 学生管理 -->
+            <div id="students-tab" class="tab-content">
+                <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                    <button class="btn btn-primary btn-small" onclick="showAddStudentModal()">+ 添加学生</button>
+                    <button class="btn btn-success btn-small" onclick="showImportStudentsModal()">📁 批量导入</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>姓名</th>
+                            <th>学号</th>
+                            <th>提交数</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="students-body">
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: #999;">加载中...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 作业管理 -->
+            <div id="homeworks-tab" class="tab-content">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>作业标题</th>
+                            <th>学科</th>
+                            <th>教师</th>
+                            <th>布置时间</th>
+                            <th>提交情况</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="homeworks-body">
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: #999;">加载中...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加教师模态框 -->
+    <div id="addTeacherModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加教师</h3>
+                <button class="close-modal" onclick="closeAddTeacherModal()">&times;</button>
+            </div>
+            <form onsubmit="addTeacher(event)">
+                <div class="form-group">
+                    <label for="teacher-username">用户名 *</label>
+                    <input type="text" id="teacher-username" required>
+                </div>
+                <div class="form-group">
+                    <label for="teacher-password">密码 * (至少6位)</label>
+                    <input type="password" id="teacher-password" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label for="teacher-subject">学科 *</label>
+                    <select id="teacher-subject" required>
+                        <option value="">请选择学科</option>
+                        <option value="语文">语文</option>
+                        <option value="数学">数学</option>
+                        <option value="英语">英语</option>
+                        <option value="物理">物理</option>
+                        <option value="化学">化学</option>
+                        <option value="生物">生物</option>
+                        <option value="地理">地理</option>
+                        <option value="历史">历史</option>
+                        <option value="政治">政治</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">添加</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 编辑教师模态框 -->
+    <div id="editTeacherModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>编辑教师</h3>
+                <button class="close-modal" onclick="closeEditTeacherModal()">&times;</button>
+            </div>
+            <form onsubmit="editTeacher(event)">
+                <input type="hidden" id="edit-teacher-id">
+                <div class="form-group">
+                    <label for="edit-teacher-username">用户名 *</label>
+                    <input type="text" id="edit-teacher-username" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-teacher-password">密码 (留空则不修改)</label>
+                    <input type="password" id="edit-teacher-password" minlength="6">
+                </div>
+                <div class="form-group">
+                    <label for="edit-teacher-subject">学科 *</label>
+                    <select id="edit-teacher-subject" required>
+                        <option value="">请选择学科</option>
+                        <option value="语文">语文</option>
+                        <option value="数学">数学</option>
+                        <option value="英语">英语</option>
+                        <option value="物理">物理</option>
+                        <option value="化学">化学</option>
+                        <option value="生物">生物</option>
+                        <option value="地理">地理</option>
+                        <option value="历史">历史</option>
+                        <option value="政治">政治</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">保存</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 添加学生模态框 -->
+    <div id="addStudentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加学生</h3>
+                <button class="close-modal" onclick="closeAddStudentModal()">&times;</button>
+            </div>
+            <form onsubmit="addStudent(event)">
+                <div class="form-group">
+                    <label for="student-name">姓名 *</label>
+                    <input type="text" id="student-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="student-id">学号 *</label>
+                    <input type="text" id="student-id" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">添加</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 编辑学生模态框 -->
+    <div id="editStudentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>编辑学生</h3>
+                <button class="close-modal" onclick="closeEditStudentModal()">&times;</button>
+            </div>
+            <form onsubmit="editStudent(event)">
+                <input type="hidden" id="edit-student-db-id">
+                <div class="form-group">
+                    <label for="edit-student-name">姓名 *</label>
+                    <input type="text" id="edit-student-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-student-id">学号 *</label>
+                    <input type="text" id="edit-student-id" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">保存</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 导入学生模态框 -->
+    <div id="importStudentsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>批量导入学生</h3>
+                <button class="close-modal" onclick="closeImportStudentsModal()">&times;</button>
+            </div>
+            <div class="file-upload" onclick="document.getElementById('excel-file').click()">
+                <div style="font-size: 48px; margin-bottom: 12px;">📄</div>
+                <div style="color: #64748b; font-size: 14px;">点击选择Excel文件</div>
+                <div style="color: #94a3b8; font-size: 12px; margin-top: 8px;">支持 .xlsx 和 .xls 格式</div>
+                <input type="file" id="excel-file" accept=".xlsx,.xls" onchange="handleFileSelect(event)">
+            </div>
+            <div id="file-info" class="file-info" style="display: none;"></div>
+            <div style="background: #f8fafc; padding: 16px; border-radius: 6px; margin-bottom: 16px; font-size: 13px; color: #64748b;">
+                <div style="font-weight: 500; margin-bottom: 8px; color: #1e293b;">📋 Excel格式要求:</div>
+                <div>• 第一行为表头（姓名、学号）</div>
+                <div>• 从第二行开始填写学生信息</div>
+                <div>• 第一列: 姓名</div>
+                <div>• 第二列: 学号</div>
+            </div>
+            <button id="upload-btn" class="btn btn-primary" style="width: 100%;" onclick="uploadExcel()" disabled>开始导入</button>
+        </div>
+    </div>
+
+    <script src="/static/admin.js"></script>
+</body>
+</html>

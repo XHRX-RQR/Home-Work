@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>学生端 - 作业提交系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            overflow: auto;
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', Arial, sans-serif;
+            background: #f0f7ff;
+            min-height: 100vh;
+            padding: 1vh;
+            color: #2c3e50;
+            overflow: visible;
+            width: 100vw;
+            max-width: 100%;
+            position: relative;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            width: 100%;
+            overflow: visible;
+            transform-origin: top center;
+            padding: 0 2vw;
+        }
+
+        .header {
+            background: white;
+            padding: 2vh 2vw;
+            border-radius: 8px;
+            margin-bottom: 1vh;
+            border: 1px solid #e3f2fd;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #1976d2;
+            font-size: clamp(16px, 3vh, 28px);
+            font-weight: 500;
+            margin-bottom: 0.5vh;
+        }
+
+        .header p {
+            color: #64748b;
+            font-size: clamp(12px, 1.8vh, 15px);
+        }
+
+        .student-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+            gap: 1vh;
+            overflow: visible;
+            margin-bottom: 2vh;
+        }
+
+        .student-card {
+            background: white;
+            padding: 1.5vh 1.5vw;
+            border-radius: 8px;
+            border: 1px solid #e3f2fd;
+            transition: all 0.2s;
+            height: fit-content;
+        }
+
+        .student-card:hover {
+            border-color: #90caf9;
+            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.1);
+        }
+
+        .student-info {
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e3f2fd;
+        }
+
+        .student-name {
+            font-size: clamp(14px, 2vh, 18px);
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.5vh;
+        }
+
+        .student-id {
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        .homework-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .homework-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #f8fafc;
+            border-radius: 6px;
+        }
+
+        .homework-info {
+            flex: 1;
+        }
+
+        .homework-subject {
+            font-weight: 500;
+            color: #1976d2;
+            font-size: 14px;
+        }
+
+        .homework-title {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        .submit-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .submit-btn.not-submitted {
+            background: #1976d2;
+            color: white;
+        }
+
+        .submit-btn.not-submitted:hover {
+            background: #1565c0;
+        }
+
+        .submit-btn.submitted {
+            background: #f1f5f9;
+            color: #64748b;
+            cursor: default;
+            border: 1px solid #e2e8f0;
+        }
+
+        .submitted-time {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        .no-homework {
+            text-align: center;
+            padding: 40px;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .stats {
+            background: white;
+            padding: 2vh 2vw;
+            border-radius: 8px;
+            border: 1px solid #e3f2fd;
+            text-align: center;
+            margin-bottom: 1vh;
+        }
+
+        .stats h3 {
+            color: #1976d2;
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 16px;
+        }
+
+        .stats-numbers {
+            display: flex;
+            justify-content: space-around;
+            gap: 16px;
+        }
+
+        .stat-item {
+            flex: 1;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 500;
+            color: #1976d2;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+            font-size: 15px;
+        }
+
+        .teacher-link {
+            position: fixed;
+            bottom: 2vh;
+            right: 2vw;
+            background: white;
+            padding: 1vh 2vw;
+            border-radius: 24px;
+            text-decoration: none;
+            color: #1976d2;
+            font-weight: 500;
+            font-size: clamp(12px, 1.6vh, 14px);
+            border: 1px solid #e3f2fd;
+            transition: all 0.2s;
+            z-index: 1000;
+            max-width: calc(100vw - 4vw);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .teacher-link:hover {
+            background: #f0f7ff;
+            border-color: #90caf9;
+        }
+
+        .admin-link {
+            position: fixed;
+            bottom: 2vh;
+            left: 2vw;
+            background: white;
+            padding: 1vh 2vw;
+            border-radius: 24px;
+            text-decoration: none;
+            color: #f59e0b;
+            font-weight: 500;
+            font-size: clamp(12px, 1.6vh, 14px);
+            border: 1px solid #fef3c7;
+            transition: all 0.2s;
+            z-index: 1000;
+            max-width: calc(100vw - 4vw);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .admin-link:hover {
+            background: #fffbeb;
+            border-color: #fbbf24;
+        }
+
+        /* 摄像头模态框样式 */
+        .camera-modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            overflow: auto;
+        }
+
+        .camera-content {
+            background-color: white;
+            margin: 2% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 95%;
+            max-width: 800px;
+            max-height: 95vh;
+            overflow-y: auto;
+        }
+
+        .camera-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .camera-header h3 {
+            color: #1976d2;
+            font-size: 20px;
+            font-weight: 500;
+        }
+
+        .close-camera {
+            color: #94a3b8;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            background: none;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .close-camera:hover {
+            color: #64748b;
+        }
+
+        .camera-container {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto 16px;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        #video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        #canvas {
+            width: 100%;
+            height: auto;
+            display: none;
+        }
+
+        .camera-controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .camera-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .camera-btn.capture {
+            background: #10b981;
+            color: white;
+        }
+
+        .camera-btn.capture:hover {
+            background: #059669;
+        }
+
+        .camera-btn.retake {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .camera-btn.retake:hover {
+            background: #d97706;
+        }
+
+        .camera-btn.upload {
+            background: #1976d2;
+            color: white;
+        }
+
+        .camera-btn.upload:hover {
+            background: #1565c0;
+        }
+
+        .camera-btn.finish {
+            background: #8b5cf6;
+            color: white;
+        }
+
+        .camera-btn.finish:hover {
+            background: #7c3aed;
+        }
+
+        .camera-btn:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+        }
+
+        .preview-images {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .preview-item {
+            position: relative;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 2px solid #e2e8f0;
+            aspect-ratio: 1;
+        }
+
+        .preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .preview-delete {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .preview-delete:hover {
+            background: rgba(220, 38, 38, 1);
+        }
+
+        .image-count-info {
+            text-align: center;
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 8px;
+            }
+
+            .header {
+                padding: 16px;
+                margin-bottom: 12px;
+            }
+
+            .header h1 {
+                font-size: 18px;
+            }
+
+            .header p {
+                font-size: 13px;
+            }
+
+            .student-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .student-card {
+                padding: 12px;
+            }
+
+            .student-name {
+                font-size: 16px;
+            }
+
+            .stats {
+                padding: 16px;
+            }
+
+            .stats-numbers {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .stat-number {
+                font-size: 24px;
+            }
+
+            .teacher-link {
+                bottom: 12px;
+                right: 12px;
+                padding: 10px 16px;
+                font-size: 13px;
+            }
+
+            .camera-content {
+                width: 98%;
+                padding: 12px;
+            }
+
+            .camera-btn {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>智能作业提交系统</h1>
+            <p>在下方找到您的姓名,点击对应学科按钮提交作业</p>
+        </div>
+
+        <div id="loading" class="loading">加载中...</div>
+
+        <div id="stats" class="stats" style="display: none;">
+            <h3>提交统计</h3>
+            <div class="stats-numbers">
+                <div class="stat-item">
+                    <div class="stat-number" id="total-homework">0</div>
+                    <div class="stat-label">已布置作业</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="total-submissions">0</div>
+                    <div class="stat-label">总提交数</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="student-list" class="student-grid"></div>
+        <div id="no-homework" class="no-homework" style="display: none;">暂无布置的作业</div>
+    </div>
+
+    <a href="/teacher/login" class="teacher-link">👨‍🏫 教师端</a>
+    <a href="/admin/login" class="admin-link">🔐 管理端</a>
+
+    <!-- 摄像头模态框 -->
+    <div id="cameraModal" class="camera-modal">
+        <div class="camera-content">
+            <div class="camera-header">
+                <h3 id="cameraTitle">拍照提交作业</h3>
+                <button class="close-camera" onclick="closeCameraModal()">&times;</button>
+            </div>
+            
+            <div class="image-count-info">
+                已拍摄: <span id="imageCount">0</span> / <span id="maxImages">5</span> 张
+            </div>
+
+            <div class="camera-container">
+                <video id="video" autoplay playsinline></video>
+                <canvas id="canvas"></canvas>
+            </div>
+
+            <div class="camera-controls">
+                <button id="captureBtn" class="camera-btn capture" onclick="capturePhoto()">📷 拍照</button>
+                <button id="retakeBtn" class="camera-btn retake" onclick="retakePhoto()" style="display: none;">🔄 重拍</button>
+                <button id="uploadBtn" class="camera-btn upload" onclick="uploadPhoto()" style="display: none;">✓ 确认上传</button>
+                <button id="finishBtn" class="camera-btn finish" onclick="finishSubmission()" disabled>完成提交</button>
+            </div>
+
+            <div id="previewImages" class="preview-images"></div>
+        </div>
+    </div>
+
+    <script>
+        let systemConfig = {
+            enable_image_upload: false,
+            max_images_per_homework: 5
+        };
+
+        let currentSubmissionId = null;
+        let currentSubject = '';
+        let videoStream = null;
+        let capturedImageData = null;
+        let uploadedImages = [];
+
+        // 加载系统配置
+        async function loadConfig() {
+            try {
+                const response = await fetch('/api/config');
+                systemConfig = await response.json();
+                document.getElementById('maxImages').textContent = systemConfig.max_images_per_homework;
+            } catch (error) {
+                console.error('加载配置失败:', error);
+            }
+        }
+
+        async function loadStudents() {
+            try {
+                const response = await fetch('/api/students');
+                const students = await response.json();
+
+                document.getElementById('loading').style.display = 'none';
+
+                const studentList = document.getElementById('student-list');
+                const noHomework = document.getElementById('no-homework');
+                const stats = document.getElementById('stats');
+                
+                studentList.innerHTML = '';
+
+                let totalHomework = 0;
+                let totalSubmissions = 0;
+                let hasAnyHomework = false;
+
+                students.forEach((student, index) => {
+                    const homeworkStatus = student.homework_status || {};
+                    const subjects = Object.keys(homeworkStatus);
+
+                    if (subjects.length > 0) {
+                        hasAnyHomework = true;
+                    }
+
+                    const card = document.createElement('div');
+                    card.className = 'student-card';
+                    card.id = `student-${index}`;
+
+                    let homeworkListHtml = '';
+                    if (subjects.length === 0) {
+                        homeworkListHtml = '<div style="text-align: center; color: #94a3b8; padding: 10px; font-size: 13px;">暂无布置的作业</div>';
+                    } else {
+                        subjects.forEach(subject => {
+                            const homeworks = homeworkStatus[subject];
+                            homeworks.forEach(hw => {
+                                totalHomework++;
+                                if (hw.submitted) totalSubmissions++;
+
+                                const imageInfo = systemConfig.enable_image_upload && hw.submitted ?
+                                    `<div class="submitted-time">📷 已上传 ${hw.image_count || 0} 张图片</div>` : '';
+                                
+                                // AI审核状态显示
+                                let aiReviewInfo = '';
+                                if (systemConfig.enable_ai_review && hw.submitted && hw.ai_review_status) {
+                                    if (hw.ai_review_status === 'pending') {
+                                        aiReviewInfo = '<div class="submitted-time" style="color: #94a3b8;">⏳ 等待AI审核</div>';
+                                    } else if (hw.ai_review_status === 'reviewing') {
+                                        aiReviewInfo = '<div class="submitted-time" style="color: #f59e0b;">🤖 AI判定中...</div>';
+                                    } else if (hw.ai_review_status === 'approved') {
+                                        aiReviewInfo = '<div class="submitted-time" style="color: #10b981;">✓ AI审核通过</div>';
+                                    } else if (hw.ai_review_status === 'rejected') {
+                                        aiReviewInfo = '<div class="submitted-time" style="color: #ef4444;">✗ AI审核未通过</div>';
+                                    } else if (hw.ai_review_status === 'error') {
+                                        aiReviewInfo = '<div class="submitted-time" style="color: #94a3b8;">⚠ AI审核失败</div>';
+                                    }
+                                }
+
+                                // 判断是否可以重新提交：未提交 或 AI审核未通过
+                                const canResubmit = !hw.submitted || (hw.ai_review_status === 'rejected');
+                                const buttonText = !hw.submitted ? '提交' : (hw.ai_review_status === 'rejected' ? '重新提交' : '已提交');
+                                const buttonClass = canResubmit ? 'not-submitted' : 'submitted';
+                                
+                                homeworkListHtml += `
+                                    <div class="homework-item">
+                                        <div class="homework-info">
+                                            <div class="homework-subject">${subject}</div>
+                                            <div class="homework-title">${hw.title}</div>
+                                            ${hw.submitted ? `<div class="submitted-time">提交: ${hw.submitted_at}</div>` : ''}
+                                            ${imageInfo}
+                                            ${aiReviewInfo}
+                                        </div>
+                                        <button
+                                            class="submit-btn ${buttonClass}"
+                                            onclick="${canResubmit ? `startSubmission(${student.id}, ${hw.homework_id}, '${subject}', ${hw.submission_id || 'null'})` : ''}"
+                                            ${canResubmit ? '' : 'disabled'}
+                                        >
+                                            ${buttonText}
+                                        </button>
+                                    </div>
+                                `;
+                            });
+                        });
+                    }
+
+                    card.innerHTML = `
+                        <div class="student-info">
+                            <div class="student-name">${student.name}</div>
+                            <div class="student-id">学号: ${student.student_id}</div>
+                        </div>
+                        <div class="homework-list">
+                            ${homeworkListHtml}
+                        </div>
+                    `;
+                    studentList.appendChild(card);
+                });
+
+                if (hasAnyHomework) {
+                    noHomework.style.display = 'none';
+                    stats.style.display = 'block';
+                    document.getElementById('total-homework').textContent = totalHomework;
+                    document.getElementById('total-submissions').textContent = totalSubmissions;
+                } else {
+                    noHomework.style.display = 'block';
+                    stats.style.display = 'none';
+                }
+
+            } catch (error) {
+                console.error('加载学生列表失败:', error);
+                alert('加载失败,请刷新页面重试');
+            }
+        }
+
+        async function startSubmission(studentId, homeworkId, subject, existingSubmissionId = null) {
+            // 如果是重新提交，先删除旧的提交记录
+            if (existingSubmissionId) {
+                if (!confirm(`检测到之前的作业被AI判定为异常，是否重新提交${subject}作业？`)) {
+                    return;
+                }
+                
+                try {
+                    // 删除旧的提交记录（后端会自动删除相关图片）
+                    const deleteResponse = await fetch(`/api/delete-submission/${existingSubmissionId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (!deleteResponse.ok) {
+                        alert('删除旧记录失败，请重试');
+                        return;
+                    }
+                } catch (error) {
+                    console.error('删除旧记录失败:', error);
+                    alert('删除旧记录失败，请重试');
+                    return;
+                }
+            }
+            
+            // 如果图片上传功能未启用，直接提交作业
+            if (!systemConfig.enable_image_upload) {
+                if (confirm(`确定要提交${subject}作业吗？`)) {
+                    try {
+                        const response = await fetch('/api/create-submission', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                student_id: studentId,
+                                homework_id: homeworkId
+                            })
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            // 直接确认提交
+                            const confirmResponse = await fetch(`/api/confirm-submission/${result.submission_id}`, {
+                                method: 'POST'
+                            });
+
+                            const confirmResult = await confirmResponse.json();
+
+                            if (confirmResult.success) {
+                                alert(confirmResult.message);
+                                loadStudents();
+                            } else {
+                                alert(confirmResult.message);
+                            }
+                        } else {
+                            alert(result.message);
+                        }
+                    } catch (error) {
+                        console.error('提交作业失败:', error);
+                        alert('提交失败,请重试');
+                    }
+                }
+                return;
+            }
+
+            // 图片上传功能已启用，需要拍照上传
+            try {
+                // 创建提交记录
+                const response = await fetch('/api/create-submission', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        student_id: studentId,
+                        homework_id: homeworkId
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    currentSubmissionId = result.submission_id;
+                    currentSubject = result.subject;
+                    uploadedImages = [];
+                    document.getElementById('cameraTitle').textContent = `${result.subject} - 拍照提交作业`;
+                    document.getElementById('imageCount').textContent = '0';
+                    document.getElementById('previewImages').innerHTML = '';
+                    document.getElementById('finishBtn').disabled = true;
+                    
+                    // 打开摄像头
+                    await openCamera();
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                console.error('开始提交失败:', error);
+                alert('操作失败,请重试');
+            }
+        }
+
+        async function openCamera() {
+            try {
+                const modal = document.getElementById('cameraModal');
+                modal.style.display = 'block';
+
+                // 检查浏览器是否支持getUserMedia
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error('您的浏览器不支持摄像头功能，请使用Chrome、Firefox或Safari等现代浏览器');
+                }
+
+                const video = document.getElementById('video');
+                
+                // 先尝试后置摄像头，如果失败则尝试前置摄像头
+                let constraints = {
+                    video: {
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                };
+
+                try {
+                    videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+                } catch (err) {
+                    console.log('后置摄像头不可用，尝试前置摄像头:', err);
+                    // 如果后置摄像头失败，尝试任意摄像头
+                    constraints = {
+                        video: {
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 }
+                        }
+                    };
+                    videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+                }
+
+                video.srcObject = videoStream;
+                
+                // 等待视频加载
+                await new Promise((resolve, reject) => {
+                    video.onloadedmetadata = () => {
+                        video.play()
+                            .then(resolve)
+                            .catch(reject);
+                    };
+                    // 设置超时
+                    setTimeout(() => reject(new Error('视频加载超时')), 10000);
+                });
+
+                console.log('摄像头已成功打开');
+            } catch (error) {
+                console.error('打开摄像头失败:', error);
+                
+                let errorMessage = '无法访问摄像头。';
+                
+                if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                    errorMessage += '\n\n原因：权限被拒绝\n解决方法：\n1. 点击地址栏左侧的锁图标\n2. 允许摄像头权限\n3. 刷新页面重试';
+                } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+                    errorMessage += '\n\n原因：未检测到摄像头设备\n解决方法：\n1. 确保设备有摄像头\n2. 检查摄像头是否被其他应用占用';
+                } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+                    errorMessage += '\n\n原因：摄像头被其他应用占用\n解决方法：\n1. 关闭其他使用摄像头的应用\n2. 重启浏览器';
+                } else if (error.name === 'OverconstrainedError') {
+                    errorMessage += '\n\n原因：摄像头不支持请求的分辨率\n解决方法：系统将自动重试';
+                } else if (error.name === 'SecurityError') {
+                    errorMessage += '\n\n原因：安全限制\n解决方法：\n1. 确保使用HTTPS访问（或localhost）\n2. 检查浏览器安全设置';
+                } else {
+                    errorMessage += '\n\n错误详情：' + error.message;
+                }
+                
+                alert(errorMessage);
+                closeCameraModal();
+            }
+        }
+
+        function capturePhoto() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const context = canvas.getContext('2d');
+
+            // 等待视频完全加载
+            if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+                alert('视频尚未准备好，请稍后再试');
+                return;
+            }
+
+            // 获取视频流的实际分辨率
+            let videoWidth = video.videoWidth;
+            let videoHeight = video.videoHeight;
+            
+            console.log('原始视频尺寸:', videoWidth, 'x', videoHeight);
+            
+            // 如果分辨率过高，进行缩放以控制文件大小
+            const maxDimension = 1920; // 最大边长
+            if (videoWidth > maxDimension || videoHeight > maxDimension) {
+                const scale = maxDimension / Math.max(videoWidth, videoHeight);
+                videoWidth = Math.floor(videoWidth * scale);
+                videoHeight = Math.floor(videoHeight * scale);
+                console.log('缩放后尺寸:', videoWidth, 'x', videoHeight);
+            }
+            
+            // 设置canvas的实际像素尺寸
+            canvas.width = videoWidth;
+            canvas.height = videoHeight;
+            
+            // 清空canvas
+            context.clearRect(0, 0, videoWidth, videoHeight);
+            
+            // 绘制完整的视频帧到canvas（如果缩放了会自动调整）
+            context.drawImage(video, 0, 0, videoWidth, videoHeight);
+
+            // 压缩图片，确保小于5MB
+            let quality = 0.85;
+            let imageData = canvas.toDataURL('image/jpeg', quality);
+            let imageSizeKB = Math.round((imageData.length * 3) / 4 / 1024);
+            
+            console.log('初始图片大小:', imageSizeKB, 'KB, 质量:', quality);
+            
+            // 如果图片大于5MB，逐步降低质量
+            const maxSizeKB = 5 * 1024; // 5MB
+            while (imageSizeKB > maxSizeKB && quality > 0.3) {
+                quality -= 0.05;
+                imageData = canvas.toDataURL('image/jpeg', quality);
+                imageSizeKB = Math.round((imageData.length * 3) / 4 / 1024);
+                console.log('压缩中... 大小:', imageSizeKB, 'KB, 质量:', quality.toFixed(2));
+            }
+            
+            if (imageSizeKB > maxSizeKB) {
+                console.warn('警告: 图片仍然超过5MB，当前大小:', imageSizeKB, 'KB');
+                alert('图片较大，已尽力压缩。如果上传失败，请尝试在光线较暗的环境拍摄。');
+            } else {
+                console.log('最终图片大小:', imageSizeKB, 'KB (', (imageSizeKB/1024).toFixed(2), 'MB), 质量:', quality.toFixed(2));
+            }
+
+            capturedImageData = imageData;
+
+            // 显示预览
+            video.style.display = 'none';
+            canvas.style.display = 'block';
+
+            // 切换按钮
+            document.getElementById('captureBtn').style.display = 'none';
+            document.getElementById('retakeBtn').style.display = 'inline-block';
+            document.getElementById('uploadBtn').style.display = 'inline-block';
+        }
+
+        function retakePhoto() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+
+            video.style.display = 'block';
+            canvas.style.display = 'none';
+            capturedImageData = null;
+
+            document.getElementById('captureBtn').style.display = 'inline-block';
+            document.getElementById('retakeBtn').style.display = 'none';
+            document.getElementById('uploadBtn').style.display = 'none';
+        }
+
+        async function uploadPhoto() {
+            if (!capturedImageData) {
+                alert('请先拍照');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/upload-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        submission_id: currentSubmissionId,
+                        image_data: capturedImageData
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    uploadedImages.push(result.image);
+                    updatePreview();
+                    retakePhoto();
+                    
+                    // 启用完成按钮
+                    document.getElementById('finishBtn').disabled = false;
+
+                    // 检查是否达到上限
+                    if (uploadedImages.length >= systemConfig.max_images_per_homework) {
+                        document.getElementById('captureBtn').disabled = true;
+                        alert('已达到最大上传数量');
+                    }
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                console.error('上传图片失败:', error);
+                alert('上传失败,请重试');
+            }
+        }
+
+        function updatePreview() {
+            const container = document.getElementById('previewImages');
+            container.innerHTML = '';
+
+            uploadedImages.forEach((img, index) => {
+                const div = document.createElement('div');
+                div.className = 'preview-item';
+                div.innerHTML = `
+                    <img src="/uploads/${img.filename}" alt="作业图片${index + 1}">
+                    <button class="preview-delete" onclick="deleteUploadedImage(${img.id}, ${index})">×</button>
+                `;
+                container.appendChild(div);
+            });
+
+            document.getElementById('imageCount').textContent = uploadedImages.length;
+        }
+
+        async function deleteUploadedImage(imageId, index) {
+            if (!confirm('确定要删除这张图片吗？')) return;
+
+            try {
+                const response = await fetch(`/api/delete-image/${imageId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    uploadedImages.splice(index, 1);
+                    updatePreview();
+                    
+                    // 重新启用拍照按钮
+                    document.getElementById('captureBtn').disabled = false;
+                    
+                    // 如果没有图片了，禁用完成按钮
+                    if (uploadedImages.length === 0) {
+                        document.getElementById('finishBtn').disabled = true;
+                    }
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                console.error('删除图片失败:', error);
+                alert('删除失败,请重试');
+            }
+        }
+
+        async function finishSubmission() {
+            if (uploadedImages.length === 0) {
+                alert('请至少上传一张作业图片');
+                return;
+            }
+
+            if (!confirm(`确定要提交${currentSubject}作业吗？已上传${uploadedImages.length}张图片。`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/confirm-submission/${currentSubmissionId}`, {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(result.message);
+                    closeCameraModal();
+                    loadStudents();
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                console.error('提交作业失败:', error);
+                alert('提交失败,请重试');
+            }
+        }
+
+        function closeCameraModal() {
+            const modal = document.getElementById('cameraModal');
+            modal.style.display = 'none';
+
+            // 停止摄像头
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+            }
+
+            // 重置状态
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            video.style.display = 'block';
+            canvas.style.display = 'none';
+            capturedImageData = null;
+            currentSubmissionId = null;
+            uploadedImages = [];
+
+            document.getElementById('captureBtn').style.display = 'inline-block';
+            document.getElementById('captureBtn').disabled = false;
+            document.getElementById('retakeBtn').style.display = 'none';
+            document.getElementById('uploadBtn').style.display = 'none';
+            document.getElementById('finishBtn').disabled = true;
+        }
+
+        // 页面加载时先加载配置，再加载学生列表
+        async function initPage() {
+            await loadConfig();
+            loadStudents();
+        }
+        
+        initPage();
+
+        // 定时刷新
+        setInterval(loadStudents, 30000);
+    </script>
+</body>
+</html>
