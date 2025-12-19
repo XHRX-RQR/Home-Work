@@ -39,9 +39,9 @@ AI_REVIEW_ACTION = config.get('ai_review', 'ai_review_action', fallback='mark_ab
 AI_REVIEW_MAX_RETRIES = config.getint('ai_review', 'ai_review_max_retries', fallback=3)
 
 # AI API认证信息
-AI_LOGIN_URL = 'https://ack-ai.qinyining.cn/api/user/login?turnstile='
+AI_LOGIN_URL = 'https://qin.qinyining.cn/api/user/login?turnstile='
 AI_USERNAME = 'private'
-AI_PASSWORD = 'passwordqwerty'
+AI_PASSWORD = 'password'
 
 # 全局cookie存储
 ai_session_cookie = None
@@ -245,6 +245,11 @@ def index():
     """学生端首页"""
     return render_template('student.html')
 
+@app.route('/about')
+def about():
+    """关于页面"""
+    return render_template('about.html')
+
 @app.route('/api/students')
 def get_students():
     """获取所有学生列表及作业提交状态"""
@@ -276,16 +281,18 @@ def get_students():
             image_count = 0
             ai_review_status = None
             ai_review_result = None
+            has_images = False
             if submission:
                 image_count = HomeworkImage.query.filter_by(submission_id=submission.id).count()
+                has_images = image_count > 0
                 ai_review_status = submission.ai_review_status
                 ai_review_result = submission.ai_review_result
             
             homework_status[hw.subject].append({
                 'homework_id': hw.id,
                 'title': hw.title,
-                'submitted': submission is not None,
-                'submitted_at': submission.submitted_at.strftime('%Y-%m-%d %H:%M:%S') if submission else None,
+                'submitted': submission is not None and has_images,  # 只有提交且有图片才算已提交
+                'submitted_at': submission.submitted_at.strftime('%Y-%m-%d %H:%M:%S') if submission and has_images else None,
                 'submission_id': submission.id if submission else None,
                 'image_count': image_count,
                 'ai_review_status': ai_review_status,
@@ -480,7 +487,7 @@ def call_ai_review(submission_id):
                     headers = {
                         'Content-Type': 'application/json',
                         'Cookie': f'session={session_cookie}',
-                        'New-Api-User': '2118'
+                        'New-Api-User': '2'
                     }
                     
                     print(f"[AI] 发送API请求到: {AI_API_URL}")
@@ -2098,6 +2105,7 @@ def admin_delete_homework(homework_id):
         return jsonify({'success': False, 'message': '删除失败,请重试'}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5011)
+    app.run(debug=True, host='0.0.0.0', port=5009)
+
 
 

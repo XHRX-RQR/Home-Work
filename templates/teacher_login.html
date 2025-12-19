@@ -117,6 +117,28 @@
             border-color: #1976d2;
         }
 
+        .remember-me {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2vh;
+        }
+
+        .remember-me input[type="checkbox"] {
+            width: auto;
+            margin-right: 0.5vw;
+            cursor: pointer;
+            accent-color: #1976d2;
+        }
+
+        .remember-me label {
+            display: inline;
+            margin: 0;
+            font-size: clamp(12px, 1.4vh, 14px);
+            color: #64748b;
+            cursor: pointer;
+            user-select: none;
+        }
+
         .submit-btn {
             width: 100%;
             padding: 1.2vh;
@@ -233,6 +255,10 @@
                 <label for="login-password">密码</label>
                 <input type="password" id="login-password" name="password" required>
             </div>
+            <div class="remember-me">
+                <input type="checkbox" id="remember-me" name="remember-me">
+                <label for="remember-me">记住我</label>
+            </div>
             <button type="submit" class="submit-btn">登录</button>
         </form>
 
@@ -263,12 +289,34 @@
             document.getElementById('success-message').style.display = 'none';
         }
 
+        // 记住我功能 - 页面加载时恢复保存的用户名
+        function loadRememberedUsername() {
+            const rememberedUsername = localStorage.getItem('teacher_username');
+            const rememberMeCheckbox = document.getElementById('remember-me');
+            
+            if (rememberedUsername) {
+                document.getElementById('login-username').value = rememberedUsername;
+                rememberMeCheckbox.checked = true;
+            }
+        }
+
+        // 页面加载时恢复数据
+        window.addEventListener('DOMContentLoaded', loadRememberedUsername);
+
         async function handleLogin(event) {
             event.preventDefault();
             hideMessages();
 
             const username = document.getElementById('login-username').value;
             const password = document.getElementById('login-password').value;
+            const rememberMe = document.getElementById('remember-me').checked;
+
+            // 保存或删除用户名
+            if (rememberMe) {
+                localStorage.setItem('teacher_username', username);
+            } else {
+                localStorage.removeItem('teacher_username');
+            }
 
             try {
                 const response = await fetch('/api/teacher/login', {

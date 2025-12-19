@@ -62,10 +62,25 @@
 
         .student-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+            /* 优先显示3个学生一行，宽度不足时自动减少 */
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 1vh;
             overflow: visible;
             margin-bottom: 2vh;
+            align-items: end;  /* 卡片底部对齐 */
+        }
+        
+        /* 剩余学生的对齐方案 */
+        /* 1. 如果只剩1个学生，占据1/2宽度且独占下一行 */
+        .student-grid > :last-child:nth-child(3n+1) {
+            grid-column: 1 / 2;  /* 占据第1列，即1/2的宽度 */
+        }
+        
+        /* 2. 如果最后剩2个学生，平分一行 */
+        .student-grid > :nth-last-child(1):nth-child(3n+2),
+        .student-grid > :nth-last-child(2):nth-child(3n+3) {
+            /* 平分宽度 */
+            flex: 1;
         }
 
         .student-card {
@@ -74,7 +89,9 @@
             border-radius: 8px;
             border: 1px solid #e3f2fd;
             transition: all 0.2s;
-            height: fit-content;
+            display: flex;
+            flex-direction: column;
+            height: 100%;  /* 填满容器高度 */
         }
 
         .student-card:hover {
@@ -104,6 +121,7 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
+            flex: 1;  /* 占据剩余空间，推动作业列表向下 */
         }
 
         .homework-item {
@@ -512,6 +530,46 @@
             }
         }
     </style>
+    <script>
+        // 自动缩放以适应窗口
+        function autoScaleContent() {
+            const container = document.querySelector('.container');
+            if (!container) return;
+            
+            const windowHeight = window.innerHeight;
+            const windowWidth = window.innerWidth;
+            const containerHeight = container.scrollHeight;
+            const containerWidth = container.scrollWidth;
+            
+            // 如果页面内容高度超过视口高度，不进行缩放
+            if (containerHeight > windowHeight - 20 || windowWidth < 768) {
+                container.style.transform = 'scale(1)';
+                container.style.transformOrigin = 'top center';
+                document.body.style.height = 'auto';
+                return;
+            }
+            
+            // 计算需要的缩放比例
+            const scaleHeight = (windowHeight - 20) / containerHeight;
+            const scaleWidth = (windowWidth - 20) / containerWidth;
+            const scale = Math.min(scaleHeight, scaleWidth, 1);
+            
+            if (scale < 1) {
+                container.style.transform = `scale(${scale})`;
+                container.style.transformOrigin = 'top center';
+                document.body.style.height = `${containerHeight * scale + 20}px`;
+            } else {
+                container.style.transform = 'scale(1)';
+                document.body.style.height = 'auto';
+            }
+        }
+        
+        window.addEventListener('load', () => {
+            setTimeout(autoScaleContent, 100);
+            setTimeout(autoScaleContent, 500);
+        });
+        window.addEventListener('resize', autoScaleContent);
+    </script>
 </head>
 <body>
     <div class="container">
@@ -542,6 +600,7 @@
 
     <a href="/teacher/login" class="teacher-link">👨‍🏫 教师端</a>
     <a href="/admin/login" class="admin-link">🔐 管理端</a>
+    <a href="/about" class="admin-link" style="left: auto; right: calc(2vw + 150px); background: #f8fafc; color: #64748b; border-color: #e2e8f0;">ℹ️ 关于</a>
 
     <!-- 摄像头模态框 -->
     <div id="cameraModal" class="camera-modal">
@@ -652,9 +711,18 @@
                                     }
                                 }
 
-                                // 判断是否可以重新提交：未提交 或 AI审核未通过
-                                const canResubmit = !hw.submitted || (hw.ai_review_status === 'rejected');
-                                const buttonText = !hw.submitted ? '提交' : (hw.ai_review_status === 'rejected' ? '重新提交' : '已提交');
+                                // 判断是否可以重新提交：未提交 或 AI审核未通过 或 AI审核出错
+                                const canResubmit = !hw.submitted || (hw.ai_review_status === 'rejected') || (hw.ai_review_status === 'error');
+                                let buttonText = '提交';
+                                if (hw.submitted) {
+                                    if (hw.ai_review_status === 'rejected') {
+                                        buttonText = '重新提交';
+                                    } else if (hw.ai_review_status === 'error') {
+                                        buttonText = '重新提交';
+                                    } else {
+                                        buttonText = '已提交';
+                                    }
+                                }
                                 const buttonClass = canResubmit ? 'not-submitted' : 'submitted';
                                 
                                 homeworkListHtml += `
@@ -700,6 +768,10 @@
                     noHomework.style.display = 'block';
                     stats.style.display = 'none';
                 }
+                
+                // 加载完成后触发自适应缩放
+                setTimeout(autoScaleContent, 100);
+                setTimeout(autoScaleContent, 500);
 
             } catch (error) {
                 console.error('加载学生列表失败:', error);
@@ -710,7 +782,7 @@
         async function startSubmission(studentId, homeworkId, subject, existingSubmissionId = null) {
             // 如果是重新提交，先删除旧的提交记录
             if (existingSubmissionId) {
-                if (!confirm(`检测到之前的作业被AI判定为异常，是否重新提交${subject}作业？`)) {
+                if (!confirm(`检测到之前的作业存在问题（AI审核未通过或出错），是否重新提交${subject}作业？`)) {
                     return;
                 }
                 
@@ -821,10 +893,10 @@
 
                 const video = document.getElementById('video');
                 
-                // 先尝试后置摄像头，如果失败则尝试前置摄像头
+                // 只使用前置摄像头
                 let constraints = {
                     video: {
-                        facingMode: 'environment',
+                        facingMode: 'user',  // 'user' 表示前置摄像头
                         width: { ideal: 1280 },
                         height: { ideal: 720 }
                     }
@@ -833,8 +905,8 @@
                 try {
                     videoStream = await navigator.mediaDevices.getUserMedia(constraints);
                 } catch (err) {
-                    console.log('后置摄像头不可用，尝试前置摄像头:', err);
-                    // 如果后置摄像头失败，尝试任意摄像头
+                    console.log('前置摄像头不可用，尝试任意摄像头:', err);
+                    // 如果前置摄像头失败，尝试任意摄像头
                     constraints = {
                         video: {
                             width: { ideal: 1280 },
@@ -1085,8 +1157,28 @@
             }
         }
 
-        function closeCameraModal() {
+        async function closeCameraModal() {
+            // 如果有提交记录但没有上传图片，提醒用户
+            if (currentSubmissionId && uploadedImages.length === 0) {
+                if (!confirm('您还没有上传任何图片，关闭窗口后作业将不会被提交。\n\n确定要关闭吗？')) {
+                    return;  // 用户取消关闭
+                }
+            }
+            
             const modal = document.getElementById('cameraModal');
+            
+            // 如果创建了提交记录但没有上传图片，删除该提交记录
+            if (currentSubmissionId && uploadedImages.length === 0) {
+                try {
+                    await fetch(`/api/delete-submission/${currentSubmissionId}`, {
+                        method: 'DELETE'
+                    });
+                    console.log('已删除未上传图片的提交记录');
+                } catch (error) {
+                    console.error('删除提交记录失败:', error);
+                }
+            }
+            
             modal.style.display = 'none';
 
             // 停止摄像头
@@ -1109,6 +1201,9 @@
             document.getElementById('retakeBtn').style.display = 'none';
             document.getElementById('uploadBtn').style.display = 'none';
             document.getElementById('finishBtn').disabled = true;
+            
+            // 刷新学生列表以更新状态
+            loadStudents();
         }
 
         // 页面加载时先加载配置，再加载学生列表

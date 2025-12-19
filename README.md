@@ -171,7 +171,7 @@
 ### 目录结构
 
 ```
-Homework Max/
+Homework/
 ├── app.py                  # Flask 应用主文件
 ├── homework.ini           # 系统配置文件
 ├── requirements.txt       # Python 依赖列表
@@ -229,7 +229,7 @@ source venv/bin/activate
 3. **安装依赖**
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 
 4. **配置系统**
