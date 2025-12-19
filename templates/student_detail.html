@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>学生详情 - 作业管理系统</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
@@ -12,33 +12,46 @@
             box-sizing: border-box;
         }
 
+        html {
+            width: 100%;
+            height: 100%;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', Arial, sans-serif;
             background: #f0f7ff;
             min-height: 100vh;
-            padding: 20px;
+            padding: 1vh;
             color: #2c3e50;
+            width: 100vw;
+            max-width: 100%;
+            margin: 0;
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
+            width: 100%;
+            transform-origin: top center;
+            padding: 0 2vw;
         }
 
         .header {
             background: white;
-            padding: 24px;
+            padding: 2vh 2vw;
             border-radius: 8px;
             border: 1px solid #e3f2fd;
-            margin-bottom: 20px;
+            margin-bottom: 1vh;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 1vh;
         }
 
         .header h1 {
             color: #1976d2;
-            font-size: 24px;
+            font-size: clamp(14px, 2.5vh, 24px);
             font-weight: 500;
         }
 
@@ -48,13 +61,13 @@
         }
 
         .btn {
-            padding: 10px 20px;
+            padding: 1vh 2vw;
             border: none;
             border-radius: 6px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s;
-            font-size: 14px;
+            font-size: clamp(11px, 1.6vh, 14px);
         }
 
         .btn-primary {
@@ -77,45 +90,45 @@
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1vh;
+            margin-bottom: 1vh;
         }
 
         .stat-card {
             background: white;
-            padding: 20px;
+            padding: 2vh 1vw;
             border-radius: 8px;
             border: 1px solid #e3f2fd;
             text-align: center;
         }
 
         .stat-number {
-            font-size: 36px;
+            font-size: clamp(20px, 4vh, 36px);
             font-weight: 500;
             color: #1976d2;
-            margin-bottom: 8px;
+            margin-bottom: 0.5vh;
         }
 
         .stat-label {
             color: #64748b;
-            font-size: 14px;
+            font-size: clamp(11px, 1.5vh, 14px);
         }
 
         .section {
             background: white;
-            padding: 24px;
+            padding: 2vh 2vw;
             border-radius: 8px;
             border: 1px solid #e3f2fd;
-            margin-bottom: 20px;
+            margin-bottom: 1vh;
         }
 
         .section h2 {
             color: #1976d2;
-            margin-bottom: 20px;
-            padding-bottom: 12px;
+            margin-bottom: 1.5vh;
+            padding-bottom: 1vh;
             border-bottom: 1px solid #e3f2fd;
-            font-size: 18px;
+            font-size: clamp(14px, 2vh, 18px);
             font-weight: 500;
         }
 
@@ -136,9 +149,9 @@
         }
 
         th, td {
-            padding: 12px;
+            padding: 1vh 0.5vw;
             text-align: left;
-            font-size: 14px;
+            font-size: clamp(11px, 1.5vh, 14px);
         }
 
         th {
@@ -207,7 +220,57 @@
             padding: 40px;
             color: #64748b;
         }
+        
+        /* 响应式表格容器 */
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        table {
+            min-width: 600px;
+        }
     </style>
+    <script>
+        // 自动缩放以适应窗口
+        function autoScaleContent() {
+            const container = document.querySelector('.container');
+            if (!container) return;
+            
+            const windowHeight = window.innerHeight;
+            const windowWidth = window.innerWidth;
+            const containerHeight = container.scrollHeight;
+            const containerWidth = container.scrollWidth;
+            
+            // 如果页面内容高度超过视口高度，不进行缩放
+            if (containerHeight > windowHeight - 20 || windowWidth < 768) {
+                container.style.transform = 'scale(1)';
+                container.style.transformOrigin = 'top center';
+                document.body.style.height = 'auto';
+                return;
+            }
+            
+            // 计算需要的缩放比例
+            const scaleHeight = (windowHeight - 20) / containerHeight;
+            const scaleWidth = (windowWidth - 20) / containerWidth;
+            const scale = Math.min(scaleHeight, scaleWidth, 1);
+            
+            if (scale < 1) {
+                container.style.transform = `scale(${scale})`;
+                container.style.transformOrigin = 'top center';
+                document.body.style.height = `${containerHeight * scale + 20}px`;
+            } else {
+                container.style.transform = 'scale(1)';
+                document.body.style.height = 'auto';
+            }
+        }
+        
+        window.addEventListener('load', () => {
+            setTimeout(autoScaleContent, 100);
+            setTimeout(autoScaleContent, 500);
+        });
+        window.addEventListener('resize', autoScaleContent);
+    </script>
 </head>
 <body>
     <div class="container">
@@ -251,6 +314,7 @@
                     <button class="btn btn-primary btn-small" onclick="exportData('json')">导出JSON</button>
                     <button class="btn btn-primary btn-small" onclick="exportData('txt')">导出TXT</button>
                 </div>
+                <div class="table-container">
                 <table>
                     <thead>
                         <tr>
@@ -266,6 +330,7 @@
                         </tr>
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>
     </div>

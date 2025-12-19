@@ -226,6 +226,11 @@
         }
 
         .status-pending {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .status-rejected {
             background: #fef3c7;
             color: #ca8a04;
         }
@@ -644,6 +649,7 @@
             <h1>教师管理端 - <span id="teacher-subject"></span></h1>
             <div class="header-actions">
                 <button class="btn btn-secondary" onclick="window.location.href='/'">返回学生端</button>
+                <button class="btn btn-secondary" onclick="window.location.href='/about'">ℹ️ 关于</button>
                 <button class="btn btn-danger" onclick="logout()">退出登录</button>
             </div>
         </div>
@@ -1224,8 +1230,28 @@
                         let homeworkStatus = '';
                         if (student.homework_details && student.homework_details.length > 0) {
                             student.homework_details.forEach(hw => {
-                                const statusClass = hw.submitted ? 'status-submitted' : 'status-pending';
-                                const statusText = hw.submitted ? '✓' : '✗';
+                                // 根据提交状态和AI审核状态决定样式
+                                let statusClass = 'status-pending';  // 默认未提交 - 灰色
+                                let statusText = '✗';
+                                
+                                if (hw.submitted) {
+                                    // 已提交
+                                    if (hw.ai_review_status === 'rejected') {
+                                        // AI审核未通过 - 黄色
+                                        statusClass = 'status-rejected';
+                                    } else if (hw.ai_review_status === 'approved' || hw.ai_review_status === 'pending' || hw.ai_review_status === 'reviewing') {
+                                        // AI审核通过或判定中 - 绿色
+                                        statusClass = 'status-submitted';
+                                    } else if (hw.ai_review_status === 'error') {
+                                        // AI审核出错 - 黄色
+                                        statusClass = 'status-rejected';
+                                    } else {
+                                        // 无AI审核或未知状态 - 绿色
+                                        statusClass = 'status-submitted';
+                                    }
+                                    statusText = '✓';
+                                }
+                                
                                 const imageInfo = systemConfig.enable_image_upload && hw.submitted && hw.image_count > 0 ?
                                     `<span class="image-badge" onclick="viewStudentImages(${hw.submission_id}, '${student.name}', '${hw.title}')" title="查看图片">📷 ${hw.image_count}</span>` : '';
                                 
